@@ -1,4 +1,7 @@
-﻿#include <stdio.h>
+﻿#define _CRT_SECURE_NO_WARNINGS
+#include <stdio.h>
+#include <stdlib.h>   
+#include <time.h>    
 
 void swap(int* a, int* b) {
     int temp = *a;
@@ -36,13 +39,59 @@ void quickSort(int arr[], int low, int high) {
 }
 
 int main() {
+    const int n = 20;
+    int arr[n];
+    int choice;
+    int min, max;       
+    int temp;          
 
-    int arr[] = { 4, 2, 5, 3, 1 };
-    int n = sizeof(arr) / sizeof(arr[0]);
+    srand(time(NULL));
+
+    printf("Выберите способ заполнения массива:\n");
+    printf("1 - Ввести 20 чисел вручную\n");
+    printf("2 - Автоматическое заполнение случайными числами\n");
+    printf("Ваш выбор: ");
+    scanf("%d", &choice);
+
+    if (choice == 1) {
+        printf("\nВведите 20 целых чисел:\n");
+        for (int i = 0; i < n; i++) {
+            printf("Элемент %d: ", i + 1);
+            scanf("%d", &arr[i]);
+        }
+    }
+    else if (choice == 2) {
+        printf("\nВведите границы диапазона (min max): ");
+        scanf("%d %d", &min, &max);
+
+        if (min > max) {
+            temp = min;
+            min = max;
+            max = temp;
+            printf("Границы были автоматически поменяны местами.\n");
+        }
+
+        for (int i = 0; i < n; i++) {
+            arr[i] = min + rand() % (max - min + 1);
+        }
+
+        printf("\nСгенерированный массив:\n");
+        for (int i = 0; i < n; i++) {
+            printf("%d ", arr[i]);
+        }
+        printf("\n");
+    }
+    else {
+        printf("Ошибка! Неверный выбор.\n");
+        return 1;
+    }
     quickSort(arr, 0, n - 1);
 
-    for (int i = 0; i < n; i++)
+    printf("\nОтсортированный массив:\n");
+    for (int i = 0; i < n; i++) {
         printf("%d ", arr[i]);
+    }
+    printf("\n");
 
     return 0;
 }
