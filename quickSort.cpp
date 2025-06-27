@@ -69,7 +69,6 @@ double get_current_time() {
 }
 
 int main() {
-    const int n = 20;
     int repeat = 1;
 
     while (repeat) {
@@ -77,7 +76,8 @@ int main() {
         printf("\t\tARRAY SORTING PROGRAM\n");
         printSeparator();
 
-        int arr[n];
+        int size;
+        int* arr = NULL;
         int choice;
         int min, max;
         int temp;
@@ -87,7 +87,18 @@ int main() {
 
         srand(time(NULL));
 
-        
+        printf("\n> Enter the number of elements to sort: ");
+        while (scanf("%d", &size) != 1 || size <= 0) {
+            printf("> ERROR: Invalid size! Please enter a positive integer: ");
+            while (getchar() != '\n'); 
+        }
+
+        arr = (int*)malloc(size * sizeof(int));
+        if (arr == NULL) {
+            printf("\n> ERROR: Memory allocation failed!\n");
+            return 1;
+        }
+
         printf("\n> Enter source data filename: ");
         scanf("%99s", input_filename);
         ensure_txt_extension(input_filename);
@@ -96,9 +107,8 @@ int main() {
         scanf("%99s", output_filename);
         ensure_txt_extension(output_filename);
 
-        
         printf("\n> Choose input method:\n");
-        printf("1. Manual input (20 integers)\n");
+        printf("1. Manual input\n");
         printf("2. Random generation\n");
         printf("3. Exit program\n");
         printf("\nYour choice: ");
@@ -106,13 +116,14 @@ int main() {
 
         if (choice == 3) {
             printf("\nExiting program...\n");
+            free(arr); 
             break;
         }
 
         if (choice == 1) {
-            printf("\n> Enter 20 integers:\n");
-            for (int i = 0; i < n; i++) {
-                printf("Element %2d: ", i + 1);
+            printf("\n> Enter %d integers:\n", size);
+            for (int i = 0; i < size; i++) {
+                printf("Element %d: ", i + 1);
                 scanf("%d", &arr[i]);
             }
         }
@@ -127,71 +138,77 @@ int main() {
                 printf("\n> Range corrected to: %d %d\n", min, max);
             }
 
-            for (int i = 0; i < n; i++) {
+            for (int i = 0; i < size; i++) {
                 arr[i] = min + rand() % (max - min + 1);
             }
 
-            printf("\n> Generated array:\n");
-            for (int i = 0; i < n; i++) {
+            printf("\n> Generated array (%d elements):\n", size);
+            for (int i = 0; i < size; i++) {
                 printf("%d ", arr[i]);
             }
             printf("\n");
         }
         else {
             printf("\n> ERROR: Invalid choice. Please try again.\n");
+            free(arr);
             continue;
         }
 
-        
         FILE* input_file = fopen(input_filename, "w");
         if (input_file == NULL) {
             printf("\n> ERROR: Cannot create source file!\n");
+            free(arr);
             return 1;
         }
 
-        fprintf(input_file, "Initial data:\n");
-        for (int i = 0; i < n; i++) {
+        fprintf(input_file, "Initial data (%d elements):\n", size);
+        for (int i = 0; i < size; i++) {
             fprintf(input_file, "%d ", arr[i]);
         }
         fprintf(input_file, "\n");
         fclose(input_file);
         printf("\n> Source data saved to: %s\n", input_filename);
 
-        int original_arr[n];
-        memcpy(original_arr, arr, n * sizeof(int));
-
-        const int iterations = 100000; 
-        start_time = get_current_time();
-
-        for (int i = 0; i < iterations; i++) {
-            
-            memcpy(arr, original_arr, n * sizeof(int));
-            quickSort(arr, 0, n - 1);
+        int* original_arr = (int*)malloc(size * sizeof(int));
+        if (original_arr == NULL) {
+            printf("\n> ERROR: Memory allocation failed!\n");
+            free(arr);
+            return 1;
         }
+        memcpy(original_arr, arr, size * sizeof(int));
 
+        start_time = get_current_time();
+        quickSort(arr, 0, size - 1);
         end_time = get_current_time();
-        cpu_time_used = (end_time - start_time) / iterations;
+        cpu_time_used = end_time - start_time;
 
         FILE* output_file = fopen(output_filename, "w");
         if (output_file == NULL) {
             printf("\n> ERROR: Cannot create result file!\n");
+            free(arr);
+            free(original_arr);
             return 1;
         }
 
-        fprintf(output_file, "Sorted array:\n");
-        for (int i = 0; i < n; i++) {
+        fprintf(output_file, "Sorted array (%d elements):\n", size);
+        for (int i = 0; i < size; i++) {
             fprintf(output_file, "%d ", arr[i]);
         }
-        fprintf(output_file, "\n\nSorting time: %.9f seconds (averaged over %d iterations)\n",
-            cpu_time_used, iterations);
+        fprintf(output_file, "\n\nSorting time: %.9f seconds\n", cpu_time_used);
         fclose(output_file);
         printf("> Results saved to: %s\n", output_filename);
-        printf("\n> Sorted array:\n");
-        for (int i = 0; i < n; i++) {
+
+        printf("\n> Sorted array (%d elements):\n", size);
+        for (int i = 0; i < size; i++) {
             printf("%d ", arr[i]);
         }
-        printf("\n\n> Sorting completed in %.9f seconds (averaged over %d iterations)\n",
-            cpu_time_used, iterations);
+
+        printf("\n\n> Sorting completed in %.9f seconds\n", cpu_time_used);
+        printf("> Elements sorted: %d\n", size);
+
+        free(arr);
+        free(original_arr);
+
         printSeparator();
         printf("\n> Continue?\n");
         printf("1. New sorting\n");
