@@ -145,7 +145,7 @@ int main() {
 
         srand(time(NULL));
 
-        // Ввод размера массива с проверкой
+       
         while (!safe_input_int(&size, "\n> Введите количество элементов для сортировки: ")) {
             printf("Попробуйте еще раз: ");
         }
@@ -173,7 +173,6 @@ int main() {
         output_filename[strcspn(output_filename, "\n")] = '\0';
         ensure_txt_extension(output_filename);
 
-        // Ввод выбора действия с проверкой
         printf("\n> Выберите способ заполнения массива:\n");
         printf("1. Ручной ввод\n");
         printf("2. Автоматическая генерация\n");
@@ -197,7 +196,7 @@ int main() {
         }
 
         if (choice == 1) {
-            // Ручной ввод элементов с проверкой
+       
             printf("\n> Введите %d целых чисел:\n", size);
             for (int i = 0; i < size; i++) {
                 char prompt[50];
@@ -208,7 +207,7 @@ int main() {
             }
         }
         else if (choice == 2) {
-            // Ввод границ диапазона с проверкой
+
             while (!safe_input_int(&min, "\n> Введите минимальное значение: ")) {
                 printf("Попробуйте еще раз: ");
             }
@@ -290,7 +289,7 @@ int main() {
         free(arr);
         free(original_arr);
 
-        // Проверка ввода для повторения программы
+
         printSeparator();
         printf("\n> Продолжить?\n");
         printf("1. Новая сортировка\n");
