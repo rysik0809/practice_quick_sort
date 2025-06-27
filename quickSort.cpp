@@ -13,7 +13,7 @@
 #include <sys/time.h>
 #endif
 
-// Улучшенная функция безопасного ввода целого числа
+
 int safe_input_int(int* value, const char* prompt) {
     char buffer[100];
     char* endptr;
@@ -23,13 +23,13 @@ int safe_input_int(int* value, const char* prompt) {
         if (prompt != NULL) printf("%s", prompt);
 
         if (fgets(buffer, sizeof(buffer), stdin) == NULL) {
-            return 0; // Ошибка ввода
+            return 0; 
         }
 
-        // Удаляем символ новой строки
+       
         buffer[strcspn(buffer, "\n")] = '\0';
 
-        // Пропускаем ведущие пробелы
+      
         char* start = buffer;
         while (*start == ' ') start++;
 
@@ -41,14 +41,14 @@ int safe_input_int(int* value, const char* prompt) {
         errno = 0;
         long_value = strtol(start, &endptr, 10);
 
-        // Проверяем ошибки преобразования
+      
         if (errno == ERANGE || long_value < INT_MIN || long_value > INT_MAX) {
             printf("Ошибка: Число вне допустимого диапазона. Пожалуйста, введите число от %d до %d: ",
                 INT_MIN, INT_MAX);
             continue;
         }
 
-        // Проверяем, что весь ввод был обработан
+       
         while (*endptr == ' ') endptr++;
         if (*endptr != '\0') {
             printf("Ошибка: Некорректный ввод. Обнаружены нечисловые символы: '%s'. Пожалуйста, введите целое число: ",
