@@ -1,15 +1,65 @@
 ﻿#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
-#include <stdlib.h>   
-#include <time.h>    
+#include <stdlib.h>
+#include <time.h>
 #include <string.h>
-#include <locale.h> 
+#include <locale.h>
+#include <limits.h>
+#include <errno.h>
 
 #ifdef _WIN32
 #include <windows.h>
 #else
 #include <sys/time.h>
 #endif
+
+// Улучшенная функция безопасного ввода целого числа
+int safe_input_int(int* value, const char* prompt) {
+    char buffer[100];
+    char* endptr;
+    long int long_value;
+
+    while (1) {
+        if (prompt != NULL) printf("%s", prompt);
+
+        if (fgets(buffer, sizeof(buffer), stdin) == NULL) {
+            return 0; // Ошибка ввода
+        }
+
+        // Удаляем символ новой строки
+        buffer[strcspn(buffer, "\n")] = '\0';
+
+        // Пропускаем ведущие пробелы
+        char* start = buffer;
+        while (*start == ' ') start++;
+
+        if (*start == '\0') {
+            printf("Ошибка: Пустой ввод. Пожалуйста, введите целое число: ");
+            continue;
+        }
+
+        errno = 0;
+        long_value = strtol(start, &endptr, 10);
+
+        // Проверяем ошибки преобразования
+        if (errno == ERANGE || long_value < INT_MIN || long_value > INT_MAX) {
+            printf("Ошибка: Число вне допустимого диапазона. Пожалуйста, введите число от %d до %d: ",
+                INT_MIN, INT_MAX);
+            continue;
+        }
+
+        // Проверяем, что весь ввод был обработан
+        while (*endptr == ' ') endptr++;
+        if (*endptr != '\0') {
+            printf("Ошибка: Некорректный ввод. Обнаружены нечисловые символы: '%s'. Пожалуйста, введите целое число: ",
+                endptr);
+            continue;
+        }
+
+        *value = (int)long_value;
+        return 1;
+    }
+}
 
 void printSeparator() {
     printf("\n==================================================\n");
@@ -86,19 +136,25 @@ int main() {
 
         int size;
         int* arr = NULL;
-        int choice; 
-        int min, max; 
-        int temp; 
-        char input_filename[100]; 
-        char output_filename[100]; 
+        int choice;
+        int min, max;
+        int temp;
+        char input_filename[100];
+        char output_filename[100];
         double start_time, end_time, cpu_time_used;
 
-        srand(time(NULL)); 
+        srand(time(NULL));
 
-        printf("\n> Введите количество элементов для сортировки: ");
-        while (scanf("%d", &size) != 1 || size <= 0) {
-            printf("> ОШИБКА: Некорректный размер! Введите положительное целое число: ");
-            while (getchar() != '\n'); 
+        // Ввод размера массива с проверкой
+        while (!safe_input_int(&size, "\n> Введите количество элементов для сортировки: ")) {
+            printf("Попробуйте еще раз: ");
+        }
+
+        while (size <= 0) {
+            printf("Ошибка: Размер должен быть положительным числом. ");
+            while (!safe_input_int(&size, "Повторите ввод: ")) {
+                printf("Попробуйте еще раз: ");
+            }
         }
 
         arr = (int*)malloc(size * sizeof(int));
@@ -108,36 +164,58 @@ int main() {
         }
 
         printf("\n> Введите имя файла для исходных данных: ");
-        scanf("%99s", input_filename);
+        fgets(input_filename, sizeof(input_filename), stdin);
+        input_filename[strcspn(input_filename, "\n")] = '\0';
         ensure_txt_extension(input_filename);
 
         printf("> Введите имя файла для результатов: ");
-        scanf("%99s", output_filename);
+        fgets(output_filename, sizeof(output_filename), stdin);
+        output_filename[strcspn(output_filename, "\n")] = '\0';
         ensure_txt_extension(output_filename);
 
+        // Ввод выбора действия с проверкой
         printf("\n> Выберите способ заполнения массива:\n");
         printf("1. Ручной ввод\n");
         printf("2. Автоматическая генерация\n");
         printf("3. Выход из программы\n");
-        printf("\nВаш выбор: ");
-        scanf("%d", &choice);
+
+        while (!safe_input_int(&choice, "\nВаш выбор: ")) {
+            printf("Попробуйте еще раз: ");
+        }
+
+        while (choice < 1 || choice > 3) {
+            printf("Ошибка: Введите число от 1 до 3. ");
+            while (!safe_input_int(&choice, "Повторите ввод: ")) {
+                printf("Попробуйте еще раз: ");
+            }
+        }
 
         if (choice == 3) {
             printf("\nЗавершение программы...\n");
-            free(arr); 
+            free(arr);
             break;
         }
 
         if (choice == 1) {
+            // Ручной ввод элементов с проверкой
             printf("\n> Введите %d целых чисел:\n", size);
             for (int i = 0; i < size; i++) {
-                printf("Элемент %d: ", i + 1);
-                scanf("%d", &arr[i]);
+                char prompt[50];
+                sprintf(prompt, "Элемент %d: ", i + 1);
+                while (!safe_input_int(&arr[i], prompt)) {
+                    printf("Попробуйте еще раз: ");
+                }
             }
         }
         else if (choice == 2) {
-            printf("\n> Введите границы диапазона (мин макс): ");
-            scanf("%d %d", &min, &max);
+            // Ввод границ диапазона с проверкой
+            while (!safe_input_int(&min, "\n> Введите минимальное значение: ")) {
+                printf("Попробуйте еще раз: ");
+            }
+
+            while (!safe_input_int(&max, "> Введите максимальное значение: ")) {
+                printf("Попробуйте еще раз: ");
+            }
 
             if (min > max) {
                 temp = min;
@@ -155,11 +233,6 @@ int main() {
                 printf("%d ", arr[i]);
             }
             printf("\n");
-        }
-        else {
-            printf("\n> ОШИБКА: Некорректный выбор. Попробуйте снова.\n");
-            free(arr); 
-            continue;
         }
 
         FILE* input_file = fopen(input_filename, "w");
@@ -217,12 +290,22 @@ int main() {
         free(arr);
         free(original_arr);
 
+        // Проверка ввода для повторения программы
         printSeparator();
         printf("\n> Продолжить?\n");
         printf("1. Новая сортировка\n");
         printf("0. Выход\n");
-        printf("\nВаш выбор: ");
-        scanf("%d", &repeat);
+
+        while (!safe_input_int(&repeat, "\nВаш выбор: ")) {
+            printf("Попробуйте еще раз: ");
+        }
+
+        while (repeat != 0 && repeat != 1) {
+            printf("Ошибка: Введите 0 или 1. ");
+            while (!safe_input_int(&repeat, "Повторите ввод: ")) {
+                printf("Попробуйте еще раз: ");
+            }
+        }
     }
 
     printf("\nПрограмма завершена. До свидания!\n");
